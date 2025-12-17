@@ -1,4 +1,4 @@
-import { Sparkles, CheckCircle, Clock, AlertTriangle, Droplets, Bell, Eye, XCircle } from 'lucide-react';
+import { Sparkles, CheckCircle, Clock, AlertTriangle, Droplets, Bell, Eye, XCircle, ArrowRight } from 'lucide-react';
 import type { SuggestedAction } from '@/types/index';
 
 interface SuggestedActionsProps {
@@ -7,21 +7,19 @@ interface SuggestedActionsProps {
 }
 
 export function SuggestedActions({ actions, onUpdateStatus }: SuggestedActionsProps) {
+
+    // 1. Safe Icon Lookup
     const getIcon = (type: SuggestedAction['type']) => {
         switch (type) {
-            case 'disinfection':
-                return Droplets;
-            case 'notification':
-                return Bell;
-            case 'monitoring':
-                return Eye;
-            case 'closure':
-                return XCircle;
-            default:
-                return AlertTriangle;
+            case 'disinfection': return Droplets;
+            case 'notification': return Bell;
+            case 'monitoring': return Eye;
+            case 'closure': return XCircle;
+            default: return Sparkles; // Default Icon
         }
     };
 
+    // 2. Safe Priority Config (Added Default)
     const getPriorityConfig = (priority: SuggestedAction['priority']) => {
         switch (priority) {
             case 'critical':
@@ -31,10 +29,12 @@ export function SuggestedActions({ actions, onUpdateStatus }: SuggestedActionsPr
             case 'medium':
                 return { bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-700', badge: 'bg-yellow-600' };
             case 'low':
+            default: // Default Config
                 return { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', badge: 'bg-blue-600' };
         }
     };
 
+    // 3. Safe Status Config (CRITICAL FIX: Added Default)
     const getStatusConfig = (status: SuggestedAction['status']) => {
         switch (status) {
             case 'completed':
@@ -42,6 +42,7 @@ export function SuggestedActions({ actions, onUpdateStatus }: SuggestedActionsPr
             case 'in-progress':
                 return { icon: Clock, color: 'text-blue-600', bg: 'bg-blue-100', label: 'In Progress' };
             case 'pending':
+            default: // Default Config
                 return { icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-100', label: 'Pending' };
         }
     };
@@ -51,9 +52,11 @@ export function SuggestedActions({ actions, onUpdateStatus }: SuggestedActionsPr
         const statusOrder = { pending: 0, 'in-progress': 1, completed: 2 };
 
         if (a.status !== b.status) {
-            return statusOrder[a.status] - statusOrder[b.status];
+            // Safety check for sort
+            return (statusOrder[a.status] ?? 0) - (statusOrder[b.status] ?? 0);
         }
-        return priorityOrder[a.priority] - priorityOrder[b.priority];
+        // Safety check for priority
+        return (priorityOrder[a.priority] ?? 3) - (priorityOrder[b.priority] ?? 3);
     });
 
     return (
@@ -78,13 +81,8 @@ export function SuggestedActions({ actions, onUpdateStatus }: SuggestedActionsPr
                     const priority = getPriorityConfig(action.priority);
                     const status = getStatusConfig(action.status);
                     const StatusIcon = status.icon;
-
                     return (
-                        <div
-                            key={action.id}
-                            className={`p-4 border-2 rounded-lg transition-all ${priority.border} ${priority.bg} ${action.status === 'completed' ? 'opacity-60' : 'hover:shadow-md'
-                                }`}
-                        >
+                        <div key={action.id} className={`p-4 border-2 rounded-lg transition-all ${priority.border} ${priority.bg}`}>
                             <div className="flex items-start gap-4">
                                 {/* Icon */}
                                 <div className={`p-2 ${priority.badge} rounded-lg flex-shrink-0`}>
@@ -162,7 +160,6 @@ export function SuggestedActions({ actions, onUpdateStatus }: SuggestedActionsPr
                 <div className="text-center py-12">
                     <Sparkles className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p className="text-gray-500">No actions recommended at this time</p>
-                    <p className="text-sm text-gray-400 mt-1">The system will suggest actions as needed</p>
                 </div>
             )}
 

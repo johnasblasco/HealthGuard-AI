@@ -60,6 +60,23 @@ export const api = {
             }),
     },
 
+
+    auth: {
+        /** Login to get User and Token */
+        login: (email: string, password: string, role: 'student' | 'admin') =>
+            request<{ user: { id: string; email: string; role: string; fullName?: string }, token: string }>('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, password, role }),
+            }),
+
+        logout: () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            // If you have a backend logout route, call it here
+            return Promise.resolve();
+        }
+    },
+
     resources: {
         /** Fetch dynamic locations (Buildings -> Rooms) */
         getLocations: () =>

@@ -12,6 +12,7 @@ export interface Symptom {
 }
 
 export interface HealthReport {
+    studentHashedId: any
     id: string;
     userId: string;
     userGradeLevel: string;
@@ -26,7 +27,7 @@ export interface HealthReport {
         seatNumber: string;
     };
     timestamp: string;
-    status: 'pending' | 'reviewed' | 'resolved';
+    status: any;
 }
 
 export interface Location {

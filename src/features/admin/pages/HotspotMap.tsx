@@ -55,10 +55,10 @@ export function HotspotMap({ hotspots }: HotspotMapProps) {
             {/* Legend */}
             <div className="flex flex-wrap gap-3 mb-6 p-4 bg-gray-50 rounded-lg">
                 <div className="text-sm text-gray-600">Risk Levels:</div>
-                {(['low', 'medium', 'high', 'critical'] as const).map(level => {
+                {(['low', 'medium', 'high', 'critical'] as const).map((level, index) => {
                     const badge = getRiskBadge(level);
                     return (
-                        <div key={level} className="flex items-center gap-2">
+                        <div key={index} className="flex items-center gap-2">
                             <div className={`w-3 h-3 rounded-full ${getRiskColor(level)}`} />
                             <span className="text-sm text-gray-700 capitalize">{badge.label}</span>
                         </div>
@@ -79,11 +79,11 @@ export function HotspotMap({ hotspots }: HotspotMapProps) {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {buildingHotspots.map((hotspot) => {
+                            {buildingHotspots.map((hotspot, index) => {
                                 const badge = getRiskBadge(hotspot.riskLevel);
                                 return (
                                     <div
-                                        key={`${hotspot.building}-${hotspot.room}`}
+                                        key={`${index}`}
                                         className="relative p-4 border-2 border-gray-200 rounded-lg hover:shadow-md transition-all group"
                                     >
                                         {/* Risk indicator dot */}

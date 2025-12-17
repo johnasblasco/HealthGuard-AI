@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Heart, Shield, UserCircle, Activity, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import StudentDashboard from '@/features/student/pages/StudentDashboard';
 import AdminDashboard from '@/features/admin/pages/AdminDashboard';
+import { api } from '@/services/api'; // Ensure this path is correct
 import type { UserRole } from '@/types/index';
+// import { toast } from 'sonner'; // Uncomment if you have sonner installed
 
 type LoginStage = 'role-selection' | 'student-login' | 'admin-login';
 
@@ -10,6 +12,7 @@ function Login() {
     const [userRole, setUserRole] = useState<UserRole | null>(null);
     const [loginStage, setLoginStage] = useState<LoginStage>('role-selection');
     const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     // Student login state
     const [studentEmail, setStudentEmail] = useState('');
@@ -21,34 +24,80 @@ function Login() {
     const [adminPassword, setAdminPassword] = useState('');
     const [adminError, setAdminError] = useState('');
 
-    const handleStudentLogin = (e: React.FormEvent) => {
+    // 0. Check for existing session on mount
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        const storedToken = localStorage.getItem('token');
+
+        if (storedUser && storedToken) {
+            try {
+                const user = JSON.parse(storedUser);
+                // Validate role is valid
+                if (user.role === 'student' || user.role === 'admin') {
+                    setUserRole(user.role as UserRole);
+                }
+            } catch (e) {
+                // Invalid session data, clear it
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+            }
+        }
+    }, []);
+
+    // 1. Unified Login Handler (REAL BACKEND)
+    const handleLogin = async (e: React.FormEvent, role: 'student' | 'admin') => {
         e.preventDefault();
-        // Demo credentials - in real app, validate against backend
-        if (studentEmail === 'student@example.com' && studentPassword === 'student123') {
-            setUserRole('student');
-            setLoginStage('role-selection'); // Reset login stage
-        } else {
-            setStudentError('Invalid credentials. Use student@example.com / student123 for demo');
+        setIsLoading(true);
+
+        const setError = role === 'student' ? setStudentError : setAdminError;
+        const email = role === 'student' ? studentEmail : adminEmail;
+        const password = role === 'student' ? studentPassword : adminPassword;
+
+        setError('');
+
+        try {
+            // CALL REAL BACKEND
+            const response = await api.auth.login(email, password, role);
+
+            // 1. Store Session
+            localStorage.setItem('token', response.token);
+            localStorage.setItem('user', JSON.stringify(response.user));
+
+            // 2. Update UI
+            // Ensure the returned role matches the requested role
+            if (response.user.role === role) {
+                setUserRole(role);
+                setLoginStage('role-selection'); // Reset for next time
+            } else {
+                throw new Error('Role mismatch. Please contact support.');
+            }
+
+        } catch (err: any) {
+            console.error("Login failed:", err);
+            // Display friendly error message
+            setError(err.message || 'Login failed. Please check your credentials.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handleAdminLogin = (e: React.FormEvent) => {
-        e.preventDefault();
-        // Demo credentials - in real app, validate against backend
-        if (adminEmail === 'admin@example.com' && adminPassword === 'admin123') {
-            setUserRole('admin');
-            setLoginStage('role-selection'); // Reset login stage
-        } else {
-            setAdminError('Invalid credentials. Use admin@example.com / admin123 for demo');
-        }
-    };
-
-    const goBackToRoleSelection = () => {
+    // 2. Handle Logout
+    const handleLogout = () => {
+        api.auth.logout(); // Clear local storage
+        setUserRole(null);
         setLoginStage('role-selection');
+
+        // Reset forms
         setStudentEmail('');
         setStudentPassword('');
         setAdminEmail('');
         setAdminPassword('');
+        setStudentError('');
+        setAdminError('');
+    };
+
+    const goBackToRoleSelection = () => {
+        setLoginStage('role-selection');
         setStudentError('');
         setAdminError('');
     };
@@ -62,8 +111,8 @@ function Login() {
                     <div className="max-w-7xl mx-auto px-6 py-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-blue-600 rounded-lg">
-                                    <Heart className="w-6 h-6 text-white" />
+                                <div className={`p-2 rounded-lg ${userRole === 'admin' ? 'bg-purple-600' : 'bg-blue-600'}`}>
+                                    {userRole === 'admin' ? <Shield className="w-6 h-6 text-white" /> : <Heart className="w-6 h-6 text-white" />}
                                 </div>
                                 <div>
                                     <h1 className="text-xl text-gray-900">HealthGuard AI</h1>
@@ -73,10 +122,7 @@ function Login() {
                                 </div>
                             </div>
                             <button
-                                onClick={() => {
-                                    setUserRole(null);
-                                    setLoginStage('role-selection');
-                                }}
+                                onClick={handleLogout}
                                 className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                             >
                                 Logout
@@ -120,7 +166,7 @@ function Login() {
                                 <p className="text-gray-600">Access your health monitoring portal</p>
                             </div>
 
-                            <form onSubmit={handleStudentLogin} className="space-y-6">
+                            <form onSubmit={(e) => handleLogin(e, 'student')} className="space-y-6">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Student Email
@@ -173,29 +219,25 @@ function Login() {
                                 </div>
 
                                 {studentError && (
-                                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+                                        <Activity className="w-4 h-4" />
                                         {studentError}
                                     </div>
                                 )}
 
-                                <div className="flex items-center justify-between">
-                                    <label className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                        />
-                                        <span className="ml-2 text-sm text-gray-700">Remember me</span>
-                                    </label>
-                                    <a href="#" className="text-sm  text-blue-600 hover:text-blue-800">
-                                        create account!
-                                    </a>
-                                </div>
-
                                 <button
                                     type="submit"
-                                    className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-100 transition-all duration-200 font-medium"
+                                    disabled={isLoading}
+                                    className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-100 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                 >
-                                    Sign in to Student Portal
+                                    {isLoading ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            Signing in...
+                                        </>
+                                    ) : (
+                                        'Sign in to Student Portal'
+                                    )}
                                 </button>
 
                                 <div className="text-center text-sm text-gray-600">
@@ -205,19 +247,6 @@ function Login() {
                                     </p>
                                 </div>
                             </form>
-
-                            <div className="mt-8 pt-8 border-t border-gray-200">
-                                <p className="text-center text-sm text-gray-600">
-                                    By signing in, you agree to our{' '}
-                                    <a href="#" className="text-blue-600 hover:text-blue-800">
-                                        Privacy Policy
-                                    </a>
-                                    {' '}and{' '}
-                                    <a href="#" className="text-blue-600 hover:text-blue-800">
-                                        Terms of Service
-                                    </a>
-                                </p>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -242,13 +271,9 @@ function Login() {
                                 </div>
                                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Portal</h1>
                                 <p className="text-gray-600">Secure access to health monitoring dashboard</p>
-                                <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-purple-50 rounded-full">
-                                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                                    <span className="text-sm text-purple-700">Encrypted Connection</span>
-                                </div>
                             </div>
 
-                            <form onSubmit={handleAdminLogin} className="space-y-6">
+                            <form onSubmit={(e) => handleLogin(e, 'admin')} className="space-y-6">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Admin Email
@@ -301,47 +326,33 @@ function Login() {
                                 </div>
 
                                 {adminError && (
-                                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+                                        <Activity className="w-4 h-4" />
                                         {adminError}
                                     </div>
                                 )}
 
-                                <div className="flex items-center justify-between">
-                                    <label className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                                        />
-                                        <span className="ml-2 text-sm text-gray-700">Remember this device</span>
-                                    </label>
-                                    <a href="#" className="text-sm text-purple-600 hover:text-purple-800">
-                                        Forgot password?
-                                    </a>
-                                </div>
-
                                 <button
                                     type="submit"
-                                    className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 px-4 rounded-lg hover:from-purple-700 hover:to-purple-800 focus:ring-4 focus:ring-purple-100 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
+                                    disabled={isLoading}
+                                    className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 px-4 rounded-lg hover:from-purple-700 hover:to-purple-800 focus:ring-4 focus:ring-purple-100 transition-all duration-200 font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                 >
-                                    Access Admin Dashboard
+                                    {isLoading ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            Verifying...
+                                        </>
+                                    ) : (
+                                        'Access Admin Dashboard'
+                                    )}
                                 </button>
 
-                                <div className="p-4 bg-gray-50 rounded-lg">
-                                    <p className="text-sm text-gray-700 mb-2">
-                                        <strong>Security Note:</strong> Admin access is restricted to authorized personnel only.
-                                    </p>
+                                <div className="p-4 bg-gray-50 rounded-lg text-center">
                                     <p className="text-xs text-gray-600">
                                         Demo credentials: admin@example.com / admin123
                                     </p>
                                 </div>
                             </form>
-
-                            <div className="mt-8 pt-8 border-t border-gray-200">
-                                <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-                                    <Shield className="w-4 h-4" />
-                                    <span>Two-factor authentication recommended for production</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -383,27 +394,11 @@ function Login() {
                                         <p className="text-gray-600 mb-4">
                                             Report symptoms and help us track health trends in your school
                                         </p>
-                                        <ul className="space-y-2 text-sm text-gray-600">
-                                            <li className="flex items-center gap-2">
-                                                <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" />
-                                                Easy symptom reporting
-                                            </li>
-                                            <li className="flex items-center gap-2">
-                                                <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" />
-                                                Interactive location mapping
-                                            </li>
-                                            <li className="flex items-center gap-2">
-                                                <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" />
-                                                Privacy-focused design
-                                            </li>
-                                        </ul>
                                     </div>
                                 </div>
                                 <div className="mt-6 flex items-center justify-end text-blue-600 group-hover:text-blue-700">
                                     <span className="text-sm">Continue as Student</span>
-                                    <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                    </svg>
+                                    <ArrowLeft className="w-5 h-5 ml-2 rotate-180 group-hover:translate-x-1 transition-transform" />
                                 </div>
                             </button>
 
@@ -420,27 +415,11 @@ function Login() {
                                         <p className="text-gray-600 mb-4">
                                             Monitor health trends and respond to predicted outbreak risks
                                         </p>
-                                        <ul className="space-y-2 text-sm text-gray-600">
-                                            <li className="flex items-center gap-2">
-                                                <div className="w-1.5 h-1.5 bg-purple-600 rounded-full" />
-                                                Real-time analytics
-                                            </li>
-                                            <li className="flex items-center gap-2">
-                                                <div className="w-1.5 h-1.5 bg-purple-600 rounded-full" />
-                                                AI-powered predictions
-                                            </li>
-                                            <li className="flex items-center gap-2">
-                                                <div className="w-1.5 h-1.5 bg-purple-600 rounded-full" />
-                                                Automated action suggestions
-                                            </li>
-                                        </ul>
                                     </div>
                                 </div>
                                 <div className="mt-6 flex items-center justify-end text-purple-600 group-hover:text-purple-700">
                                     <span className="text-sm">Continue as Admin</span>
-                                    <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                    </svg>
+                                    <ArrowLeft className="w-5 h-5 ml-2 rotate-180 group-hover:translate-x-1 transition-transform" />
                                 </div>
                             </button>
                         </div>

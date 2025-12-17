@@ -7,24 +7,25 @@ interface BayesianAnalysisProps {
 }
 
 export function BayesianAnalysis({ parameters }: BayesianAnalysisProps) {
+    // FIX: Safe access to confidence interval with fallback to 0
+    // This handles both the array format [min, max] and the database object { ciLower, ciUpper }
+    const lowerBound = Array.isArray(parameters.confidenceInterval)
+        ? parameters.confidenceInterval[0]
+        : (parameters as any).ciLower || 0;
+
+    const upperBound = Array.isArray(parameters.confidenceInterval)
+        ? parameters.confidenceInterval[1]
+        : (parameters as any).ciUpper || 0;
+
     const chartData = [
-        {
-            name: 'Prior',
-            value: parameters.priorProbability * 100,
-            color: '#94a3b8',
-        },
-        {
-            name: 'Posterior',
-            value: parameters.posteriorProbability * 100,
-            color: '#3b82f6',
-        },
+        { name: 'Prior', value: parameters.priorProbability * 100, color: '#94a3b8' },
+        { name: 'Posterior', value: parameters.posteriorProbability * 100, color: '#3b82f6' },
     ];
 
-    const getRiskLevel = (probability: number): { level: string; color: string; bg: string } => {
+    const getRiskLevel = (probability: number) => {
         if (probability >= 0.4) return { level: 'High Risk', color: 'text-red-700', bg: 'bg-red-50' };
         if (probability >= 0.25) return { level: 'Moderate Risk', color: 'text-orange-700', bg: 'bg-orange-50' };
-        if (probability >= 0.15) return { level: 'Low Risk', color: 'text-yellow-700', bg: 'bg-yellow-50' };
-        return { level: 'Minimal Risk', color: 'text-green-700', bg: 'bg-green-50' };
+        return { level: 'Low Risk', color: 'text-green-700', bg: 'bg-green-50' };
     };
 
     const risk = getRiskLevel(parameters.posteriorProbability);
@@ -42,7 +43,7 @@ export function BayesianAnalysis({ parameters }: BayesianAnalysisProps) {
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border-2 border-gray-100 p-6">
+        <div className="bg-white rounded-xl shadow-sm border-2 border-gray-100 p-6 h-full">
             <div className="flex items-start justify-between mb-6">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
@@ -80,19 +81,20 @@ export function BayesianAnalysis({ parameters }: BayesianAnalysisProps) {
                         <div className="text-sm text-blue-900 mb-2">95% Confidence Interval</div>
                         <div className="flex items-center justify-between">
                             <span className="text-blue-700">
-                                {(parameters.confidenceInterval[0] * 100).toFixed(1)}%
+                                {(Number(lowerBound) * 100).toFixed(1)}%
                             </span>
                             <div className="flex-1 mx-4 h-2 bg-blue-200 rounded-full relative">
                                 <div
                                     className="absolute h-full bg-blue-600 rounded-full"
                                     style={{
-                                        left: `${(parameters.confidenceInterval[0] / parameters.confidenceInterval[1]) * 100}%`,
+                                        left: `${(Number(lowerBound) / (Number(upperBound) || 1)) * 100}%`,
                                         right: 0,
+                                        width: `${((Number(upperBound) - Number(lowerBound)) * 100)}%`
                                     }}
                                 />
                             </div>
                             <span className="text-blue-700">
-                                {(parameters.confidenceInterval[1] * 100).toFixed(1)}%
+                                {(Number(upperBound) * 100).toFixed(1)}%
                             </span>
                         </div>
                     </div>
@@ -117,7 +119,7 @@ export function BayesianAnalysis({ parameters }: BayesianAnalysisProps) {
                             <TrendingUp className="w-4 h-4 text-orange-600" />
                         </div>
                         <div className="text-2xl text-gray-900">
-                            {parameters.likelihoodRatio.toFixed(2)}×
+                            {Number(parameters.likelihoodRatio).toFixed(2)}×
                         </div>
                         <p className="text-xs text-gray-500 mt-1">Evidence strength multiplier</p>
                     </div>
@@ -147,7 +149,7 @@ export function BayesianAnalysis({ parameters }: BayesianAnalysisProps) {
                     )}{' '}
                     from {(parameters.priorProbability * 100).toFixed(1)}% to{' '}
                     <strong>{(parameters.posteriorProbability * 100).toFixed(1)}%</strong>.
-                    The likelihood ratio of {parameters.likelihoodRatio.toFixed(2)} indicates{' '}
+                    The likelihood ratio of {Number(parameters.likelihoodRatio).toFixed(2)} indicates{' '}
                     {parameters.likelihoodRatio > 2 ? 'strong' : 'moderate'} evidence supporting this assessment.
                 </p>
             </div>
