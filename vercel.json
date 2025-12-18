@@ -1,8 +1,14 @@
 {
-  "git": {
-    "deploymentEnabled": {
-      "main": true,
-      "*": false
-    }
-  }
+    "git": {
+        "deploymentEnabled": {
+            "main": true,
+            "*": false
+        }
+    },
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ]
 }
