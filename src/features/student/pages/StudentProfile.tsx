@@ -1,7 +1,9 @@
 import { User, Mail, GraduationCap, MapPin, Shield } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface StudentProfileProps {
     student: {
+        id: string;
         name: string;
         email: string;
         gradeLevel: string;
@@ -15,9 +17,20 @@ interface StudentProfileProps {
 }
 
 export function StudentProfile({ student }: StudentProfileProps) {
+    const navigate = useNavigate();
+
     return (
-        <div className="bg-white rounded-xl shadow-sm border-2 border-gray-100 p-6">
-            <div className="flex items-start gap-6">
+        <div onClick={() => navigate(`/student/${student.id}/health-report`)}
+            className="group relative hover:cursor-pointer hover:scale-105 transition-all duration-300 shadow-2xl bg-white rounded-xl border-2 border-gray-100 p-6 overflow-hidden">
+
+            {/* Hover Overlay */}
+            <div className="absolute inset-0 bg-blue-600/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10">
+                <span className="text-white text-lg font-semibold tracking-wide">
+                    View Health Report
+                </span>
+            </div>
+
+            <div className="flex items-start gap-6 relative z-0">
                 {/* Avatar */}
                 <div className="flex-shrink-0">
                     <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
@@ -70,5 +83,6 @@ export function StudentProfile({ student }: StudentProfileProps) {
                 </div>
             </div>
         </div>
+
     );
 }

@@ -12,15 +12,25 @@ export interface Symptom {
     icon: string;
 }
 
+export interface Seat {
+    number: string;
+    id: string; // UUID from backend
+}
 
-export type CreateHealthReport = Omit<
-    HealthReport,
-    'id' | 'userId' | 'studentHashedId' | 'timestamp' | 'status'
->;
+export interface Room {
+    name: string;
+    seats: Seat[];
+}
 
+export interface Location {
+    building: string;
+    rooms: Room[];
+}
 
 export interface HealthReport {
-    studentHashedId: any
+    studentUserId?: string | undefined;
+    gradeLevel: string;
+    studentHashedId: string;
     id: string;
     userId: string;
     userGradeLevel: string;
@@ -28,19 +38,29 @@ export interface HealthReport {
     severity: SeverityLevel;
     dateOfOnset: string;
     confirmedDisease: boolean;
-    diseaseName?: string;
+    diseaseName?: string | null;
+    seatId?: string; // matches seat UUID
     location: {
         building: string;
         room: string;
         seatNumber: string;
+        seatId?: string; // matches seat UUID
     };
     timestamp: string;
-    status: any;
+    status: 'pending' | 'reviewed' | 'resolved' | 'investigating';
 }
 
-export interface Location {
-    building: string;
-    rooms: string[];
+export interface CreateHealthReport {
+    studentUserId: string;
+    userGradeLevel: string;
+    gradeLevel: string;
+    location: any;
+    severity: SeverityLevel;
+    dateOfOnset: string;
+    confirmedDisease: boolean;
+    diseaseName?: string | null;
+    seatId: string;
+    symptoms: string[];
 }
 
 export interface HotspotData {

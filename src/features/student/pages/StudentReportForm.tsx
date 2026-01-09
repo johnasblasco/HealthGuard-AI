@@ -8,9 +8,10 @@ import type { SeverityLevel, CreateHealthReport } from '@/types/index';
 interface StudentReportFormProps {
     onSuccess: () => void;
     onClose?: () => void;
+    studentUserId: string;
 }
 
-export function StudentReportForm({ onSuccess, onClose }: StudentReportFormProps) {
+export function StudentReportForm({ onSuccess, onClose, studentUserId }: StudentReportFormProps) {
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState('');
@@ -22,13 +23,16 @@ export function StudentReportForm({ onSuccess, onClose }: StudentReportFormProps
         dateOfOnset: new Date().toISOString().split('T')[0],
         confirmedDisease: false,
         diseaseName: '',
-        gradeLevel: 'Grade 10', // Default
+        gradeLevel: 'Grade 10',
         location: {
             building: '',
             room: '',
             seatNumber: '',
+            seatId: '', // this must match the backend seat UUID
         },
     });
+
+
 
     const handleSymptomToggle = (symptomId: string) => {
         setFormData(prev => ({
@@ -44,25 +48,37 @@ export function StudentReportForm({ onSuccess, onClose }: StudentReportFormProps
         setSubmitError('');
 
         try {
+            if (!formData.location?.seatId) {
+                throw new Error("Please select a valid seat.");
+            }
+
             const payload: CreateHealthReport = {
+                studentUserId,
+                gradeLevel: formData.gradeLevel,
+
+                // IMPORTANT: your type also includes userGradeLevel
                 userGradeLevel: formData.gradeLevel,
-                symptoms: formData.symptoms,
+
+                location: {
+                    building: formData.location.building,
+                    room: formData.location.room,
+                    seatNumber: formData.location.seatNumber,
+                    seatId: formData.location.seatId,
+                },
+
                 severity: formData.severity,
-                dateOfOnset: new Date(formData.dateOfOnset).toISOString(),
+                dateOfOnset: formData.dateOfOnset,
                 confirmedDisease: formData.confirmedDisease,
-                diseaseName: formData.confirmedDisease ? formData.diseaseName : undefined,
-                location: formData.location,
+                diseaseName: formData.confirmedDisease ? formData.diseaseName : null,
+                seatId: formData.location.seatId,
+                symptoms: formData.symptoms,
             };
+
 
             await api.reports.submit(payload);
 
             setIsSuccess(true);
-
-            // Wait 2 seconds before closing
-            setTimeout(() => {
-                onSuccess();
-            }, 2000);
-
+            setTimeout(() => onSuccess(), 2000);
         } catch (error: any) {
             console.error("Submission failed", error);
             setSubmitError(error.message || "Failed to submit report. Please try again.");
@@ -73,7 +89,10 @@ export function StudentReportForm({ onSuccess, onClose }: StudentReportFormProps
     // --- Steps Logic ---
     const canProceedToStep2 = formData.symptoms.length > 0;
     const canProceedToStep3 = formData.gradeLevel && formData.dateOfOnset;
-    const canProceedToStep4 = formData.location.building && formData.location.room && formData.location.seatNumber;
+    const canProceedToStep4 =
+        !!formData.location.building &&
+        !!formData.location.room &&
+        !!formData.location.seatId; // ✅ require UUID
 
     if (isSuccess) {
         return (
@@ -157,7 +176,13 @@ export function StudentReportForm({ onSuccess, onClose }: StudentReportFormProps
                 {step === 3 && (
                     <div className="space-y-6">
                         <h2 className="text-2xl text-gray-900">Location</h2>
-                        <LocationSelector selectedLocation={formData.location} onLocationChange={(loc) => setFormData(prev => ({ ...prev, location: loc }))} />
+                        <LocationSelector
+                            selectedLocation={formData.location}
+                            onLocationChange={(loc) => {
+                                console.log("LocationSelector loc:", loc);
+                                setFormData(prev => ({ ...prev, location: loc }));
+                            }}
+                        />
                         <div className="flex justify-between">
                             <button onClick={() => setStep(2)} className="px-6 py-3 border rounded-lg">Back</button>
                             <button onClick={() => setStep(4)} disabled={!canProceedToStep4} className="px-6 py-3 bg-blue-600 text-white rounded-lg disabled:opacity-50">Review</button>

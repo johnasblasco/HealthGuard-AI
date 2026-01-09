@@ -28,11 +28,65 @@ import type {
 
 // School locations
 export const LOCATIONS: Location[] = [
-    { building: 'Main Building', rooms: ['101', '102', '103', '104', '105', '201', '202', '203', '204', '205'] },
-    { building: 'Science Building', rooms: ['Lab-1', 'Lab-2', 'Lab-3', '301', '302', '303'] },
-    { building: 'Arts Building', rooms: ['Studio-1', 'Studio-2', '401', '402', '403'] },
-    { building: 'Sports Complex', rooms: ['Gym-1', 'Gym-2', 'Pool Area', '501', '502'] },
+    {
+        building: "Main Building",
+        rooms: [
+            {
+                name: "101",
+                seats: [
+                    { number: "A1", id: "67fec0af-ffa7-4532-a580-b6ead9c1f193" },
+                    { number: "A2", id: "c5b1f8e9-4aee-4b2f-8d6a-123456789abc" },
+                    { number: "A3", id: "d4a5b6c7-89ef-4567-1234-abcdef123456" },
+                ],
+            },
+            {
+                name: "102",
+                seats: [
+                    { number: "B1", id: "e5f6g7h8-9i0j-1234-klmn-567890abcdef" },
+                    { number: "B2", id: "f1a2b3c4-d5e6-7890-abcd-ef1234567890" },
+                ],
+            },
+            {
+                name: "103",
+                seats: [
+                    { number: "C1", id: "a1b2c3d4-e5f6-7890-abcd-1234567890ef" },
+                    { number: "C2", id: "b1c2d3e4-f5g6-7890-abcd-0987654321ab" },
+                ],
+            },
+        ],
+    },
+    {
+        building: "Science Building",
+        rooms: [
+            {
+                name: "Lab-1",
+                seats: [
+                    { number: "A1", id: "c1d2e3f4-5678-90ab-cdef-1234567890ab" },
+                    { number: "A2", id: "d1e2f3g4-5678-90ab-cdef-0987654321cd" },
+                ],
+            },
+            {
+                name: "Lab-2",
+                seats: [
+                    { number: "B1", id: "e1f2g3h4-5678-90ab-cdef-112233445566" },
+                ],
+            },
+        ],
+    },
+    {
+        building: "Arts Building",
+        rooms: [
+            {
+                name: "401",
+                seats: [
+                    { number: "E1", id: "f1g2h3i4-5678-90ab-cdef-556677889900" },
+                    { number: "E2", id: "g1h2i3j4-5678-90ab-cdef-998877665544" },
+                ],
+            },
+        ],
+    },
 ];
+
 
 // Mock health reports
 // export const MOCK_REPORTS: HealthReport[] = [

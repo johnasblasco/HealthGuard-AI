@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from "react-router-dom";
 import { Heart, Shield, UserCircle, Activity, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
-import StudentDashboard from '@/features/student/pages/StudentDashboard';
-import AdminDashboard from '@/features/admin/pages/AdminDashboard';
+import { Link } from 'react-router-dom';
 import { api } from '@/services/api'; // Ensure this path is correct
 import type { UserRole } from '@/types/index';
+
 // import { toast } from 'sonner'; // Uncomment if you have sonner installed
 
 type LoginStage = 'role-selection' | 'student-login' | 'admin-login';
 
 function Login() {
+    //init
+    const navigate = useNavigate();
+
+    // State variables
     const [userRole, setUserRole] = useState<UserRole | null>(null);
     const [loginStage, setLoginStage] = useState<LoginStage>('role-selection');
     const [showPassword, setShowPassword] = useState(false);
@@ -45,7 +50,10 @@ function Login() {
     }, []);
 
     // 1. Unified Login Handler (REAL BACKEND)
-    const handleLogin = async (e: React.FormEvent, role: 'student' | 'admin') => {
+    const handleLogin = async (
+        e: React.FormEvent,
+        role: 'student' | 'admin'
+    ) => {
         e.preventDefault();
         setIsLoading(true);
 
@@ -56,30 +64,35 @@ function Login() {
         setError('');
 
         try {
-            // CALL REAL BACKEND
             const response = await api.auth.login(email, password, role);
 
             // 1. Store Session
             localStorage.setItem('token', response.token);
             localStorage.setItem('user', JSON.stringify(response.user));
 
-            // 2. Update UI
-            // Ensure the returned role matches the requested role
-            if (response.user.role === role) {
-                setUserRole(role);
-                setLoginStage('role-selection'); // Reset for next time
-            } else {
+            // 2. Validate role
+            if (response.user.role !== role) {
                 throw new Error('Role mismatch. Please contact support.');
+            }
+
+            // 3. Update UI state (optional)
+            setUserRole(role);
+            setLoginStage('role-selection'); // or remove if no longer needed
+
+            if (role === 'student') {
+                navigate('/student', { replace: true });
+            } else {
+                navigate('/admin', { replace: true });
             }
 
         } catch (err: any) {
             console.error("Login failed:", err);
-            // Display friendly error message
             setError(err.message || 'Login failed. Please check your credentials.');
         } finally {
             setIsLoading(false);
         }
     };
+
 
     // 2. Handle Logout
     const handleLogout = () => {
@@ -102,46 +115,7 @@ function Login() {
         setAdminError('');
     };
 
-    // If user is logged in, show dashboard
-    if (userRole) {
-        return (
-            <div className="min-h-screen bg-gray-50">
-                {/* Navigation Bar */}
-                <nav className="bg-white border-b-2 border-gray-200 sticky top-0 z-50">
-                    <div className="max-w-7xl mx-auto px-6 py-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className={`p-2 rounded-lg ${userRole === 'admin' ? 'bg-purple-600' : 'bg-blue-600'}`}>
-                                    {userRole === 'admin' ? <Shield className="w-6 h-6 text-white" /> : <Heart className="w-6 h-6 text-white" />}
-                                </div>
-                                <div>
-                                    <h1 className="text-xl text-gray-900">SickSense</h1>
-                                    <p className="text-xs text-gray-500">
-                                        {userRole === 'student' ? 'Student Portal' : 'Admin Dashboard'}
-                                    </p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={handleLogout}
-                                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                                Logout
-                            </button>
-                        </div>
-                    </div>
-                </nav>
 
-                {/* Content */}
-                {userRole === 'student' ? (
-                    <div className="py-8">
-                        <StudentDashboard />
-                    </div>
-                ) : (
-                    <AdminDashboard />
-                )}
-            </div>
-        );
-    }
 
     // Show login pages based on loginStage
     switch (loginStage) {
@@ -245,6 +219,9 @@ function Login() {
                                     <p className="font-mono text-xs bg-gray-100 p-2 rounded mt-1">
                                         student@example.com / student123
                                     </p>
+                                </div>
+                                <div className='flex justify-center text-sm text-blue-600 underline'>
+                                    <Link to="/signup">create an account</Link>
                                 </div>
                             </form>
                         </div>
@@ -394,6 +371,14 @@ function Login() {
                                         <p className="text-gray-600 mb-4">
                                             Report symptoms and help us track health trends in your school
                                         </p>
+                                        <ul className="space-y-2 text-sm text-gray-600">
+                                            <li className="flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" />
+                                                Easy symptom reporting </li>
+                                            <li className="flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" />
+                                                Interactive location mapping </li> <li className="flex items-center gap-2"> <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" /> Privacy-focused design </li> </ul>
+
                                     </div>
                                 </div>
                                 <div className="mt-6 flex items-center justify-end text-blue-600 group-hover:text-blue-700">
@@ -415,6 +400,17 @@ function Login() {
                                         <p className="text-gray-600 mb-4">
                                             Monitor health trends and respond to predicted outbreak risks
                                         </p>
+                                        <ul className="space-y-2 text-sm text-gray-600">
+                                            <li className="flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 bg-purple-600 rounded-full" /> R
+                                                eal-time analytics </li>
+                                            <li className="flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 bg-purple-600 rounded-full" />
+                                                AI-powered predictions </li>
+                                            <li className="flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 bg-purple-600 rounded-full" />
+                                                Automated action suggestions </li>
+                                        </ul>
                                     </div>
                                 </div>
                                 <div className="mt-6 flex items-center justify-end text-purple-600 group-hover:text-purple-700">

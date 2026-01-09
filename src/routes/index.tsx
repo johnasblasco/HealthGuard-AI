@@ -1,10 +1,8 @@
 import { useRoutes } from "react-router-dom";
 import Login from "@/auth/Login";
-import ProtectedRoute from "./protected";
+import Signup from "@/auth/Signup";
+import AppLayout from "@/components/layout/AppLayout";
 
-import MainLayout from "@/layout/MainLayout";
-import AdminLayout from "@/layout/AdminLayout";
-import StudentLayout from "@/layout/StudentLayout";
 
 import { adminRoutes } from "./admin.routes";
 import { clientRoutes } from "./student.routes";
@@ -12,27 +10,28 @@ import { clientRoutes } from "./student.routes";
 export default function AppRoutes() {
     const routes = useRoutes([
         { path: "/login", element: <Login /> },
-
+        { path: "/signup", element: <Signup /> },
         {
-            path: "/",
-            element: (
-                <ProtectedRoute>
-                    <MainLayout />  {/* shared shell DATA and Everyting across admin and client */}
-                </ProtectedRoute>
-            ),
+            element: <AppLayout />,
+
             children: [
                 {
                     path: "admin",
-                    element: <AdminLayout />,
+
                     children: adminRoutes,
                 },
                 {
                     path: "student",
-                    element: <StudentLayout />,
+
                     children: clientRoutes,
                 },
             ],
         },
+        // Redirect any unknown routes to login
+        {
+            path: "*",
+            element: <Login />,
+        }
     ]);
 
     return routes;

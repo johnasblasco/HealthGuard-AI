@@ -46,6 +46,7 @@ export default function StudentDashboard() {
 
     // Build profile object from session data
     const studentProfileData = {
+        id: user.id || '',
         name: user.fullName || user.email?.split('@')[0] || 'Student',
         email: user.email || '',
         gradeLevel: 'Grade 10', // You can update your User schema to store this later
@@ -126,6 +127,26 @@ export default function StudentDashboard() {
                 {/* Profile Section */}
                 <StudentProfile student={studentProfileData} />
 
+                {/* Quick Report Card */}
+                <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-6 text-white">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h3 className="text-xl mb-2">Feeling unwell?</h3>
+                            <p className="text-blue-100 mb-4 md:mb-0">
+                                Report symptoms quickly to help prevent spread
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => setShowReportForm(true)}
+                            className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors font-medium whitespace-nowrap"
+                        >
+                            <PlusCircle className="w-5 h-5" />
+                            Report Symptoms
+                        </button>
+                    </div>
+                </div>
+
+
                 {/* Stats Overview */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-white rounded-xl p-6 shadow-sm border-2 border-gray-100">
@@ -159,25 +180,6 @@ export default function StudentDashboard() {
                     </div>
                 </div>
 
-                {/* Quick Report Card */}
-                <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-6 text-white">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <h3 className="text-xl mb-2">Feeling unwell?</h3>
-                            <p className="text-blue-100 mb-4 md:mb-0">
-                                Report symptoms quickly to help prevent spread
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => setShowReportForm(true)}
-                            className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors font-medium whitespace-nowrap"
-                        >
-                            <PlusCircle className="w-5 h-5" />
-                            Report Symptoms
-                        </button>
-                    </div>
-                </div>
-
                 {/* Health Status Alert */}
                 {pendingReports === 0 && studentReports.length > 0 && (
                     <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6">
@@ -195,17 +197,6 @@ export default function StudentDashboard() {
                     </div>
                 )}
 
-                {/* My Reports Section */}
-                <div id="my-reports">
-                    {loading ? (
-                        <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
-                            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                            <p className="text-gray-500 text-sm">Loading your history...</p>
-                        </div>
-                    ) : (
-                        <MyReports reports={studentReports} />
-                    )}
-                </div>
 
                 {/* Health Tips */}
                 <HealthTips />

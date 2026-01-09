@@ -69,6 +69,11 @@ export const api = {
                 method: 'POST',
                 body: JSON.stringify({ email, password, role }),
             }),
+        signup: (payload: any) =>
+            request("/auth/signup", {
+                method: "POST",
+                body: JSON.stringify(payload),
+            }),
 
         logout: () => {
             localStorage.removeItem('token');
