@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Building2, DoorOpen, MapPin } from 'lucide-react';
-import { LOCATIONS } from '@/utils/MockData';
 
 interface Seat {
     number: string;
@@ -18,6 +17,8 @@ interface LocationData {
 }
 
 interface LocationSelectorProps {
+    locations: LocationData[];
+    loading?: boolean;
     selectedLocation: {
         seatId: string;
         building: string;
@@ -26,14 +27,17 @@ interface LocationSelectorProps {
     };
     onLocationChange: (location: { seatId: string; building: string; room: string; seatNumber: string }) => void;
 }
-
 export function LocationSelector({
+    locations,
+    loading,
     selectedLocation = { seatId: '', building: '', room: '', seatNumber: '' },
-    onLocationChange
+    onLocationChange,
 }: LocationSelectorProps) {
+
+
     const [step, setStep] = useState<'building' | 'room' | 'seat'>('building');
 
-    const selectedBuildingData: LocationData | undefined = LOCATIONS.find(
+    const selectedBuildingData: LocationData | undefined = locations.find(
         loc => loc.building === selectedLocation.building
     );
 
@@ -67,6 +71,11 @@ export function LocationSelector({
             seatId: seat.id
         });
     };
+
+
+    if (loading) return <div className="text-center text-gray-500">Loading locations...</div>;
+    if (!locations?.length) return <div className="text-center text-gray-500">No locations available.</div>;
+
 
     return (
         <div className="space-y-6">
@@ -110,7 +119,7 @@ export function LocationSelector({
                 <div className="space-y-3">
                     <h3 className="text-center text-gray-700">Select Your Building</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {LOCATIONS.map(location => (
+                        {locations.map(location => (
                             <button
                                 key={location.building}
                                 onClick={() => handleBuildingSelect(location.building)}
@@ -217,8 +226,8 @@ export function LocationSelector({
                                                     })
                                                 }
                                                 className={`p-3 rounded-lg border-2 transition-all ${isSelected
-                                                        ? 'border-blue-600 bg-blue-50 text-blue-700'
-                                                        : 'border-gray-200 hover:border-blue-600 hover:bg-blue-50'
+                                                    ? 'border-blue-600 bg-blue-50 text-blue-700'
+                                                    : 'border-gray-200 hover:border-blue-600 hover:bg-blue-50'
                                                     }`}
                                             >
                                                 {seat.number}

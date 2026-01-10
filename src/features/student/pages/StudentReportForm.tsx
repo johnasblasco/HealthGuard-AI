@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Send, AlertCircle, CheckCircle2, X } from 'lucide-react';
 import { SymptomSelector } from './SymptomSelector';
 import { LocationSelector } from './LocationSelector';
@@ -8,15 +8,23 @@ import type { SeverityLevel, CreateHealthReport } from '@/types/index';
 interface StudentReportFormProps {
     onSuccess: () => void;
     onClose?: () => void;
-    studentUserId: string;
+    locations: any[];
+    locationsLoading?: boolean;
 }
 
-export function StudentReportForm({ onSuccess, onClose, studentUserId }: StudentReportFormProps) {
+export function StudentReportForm({
+    onSuccess,
+    onClose,
+    locations,
+    locationsLoading,
+}: StudentReportFormProps) {
+
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const studentUserId = user?.id; // ✅ get from session
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState('');
     const [isSuccess, setIsSuccess] = useState(false);
-
     const [formData, setFormData] = useState({
         symptoms: [] as string[],
         severity: 'mild' as SeverityLevel,
@@ -177,11 +185,10 @@ export function StudentReportForm({ onSuccess, onClose, studentUserId }: Student
                     <div className="space-y-6">
                         <h2 className="text-2xl text-gray-900">Location</h2>
                         <LocationSelector
+                            locations={locations}
+                            loading={locationsLoading}
                             selectedLocation={formData.location}
-                            onLocationChange={(loc) => {
-                                console.log("LocationSelector loc:", loc);
-                                setFormData(prev => ({ ...prev, location: loc }));
-                            }}
+                            onLocationChange={(loc) => setFormData(prev => ({ ...prev, location: loc }))}
                         />
                         <div className="flex justify-between">
                             <button onClick={() => setStep(2)} className="px-6 py-3 border rounded-lg">Back</button>

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Activity, TrendingDown, PlusCircle } from 'lucide-react';
 import { StudentProfile } from './StudentProfile';
-import { MyReports } from './MyReports';
 import { HealthTips } from './HealthTips';
 import { StudentReportForm } from './StudentReportForm';
 import { api } from '@/services/api';
@@ -11,6 +10,9 @@ export default function StudentDashboard() {
     const [showReportForm, setShowReportForm] = useState(false);
     const [studentReports, setStudentReports] = useState<HealthReport[]>([]);
     const [loading, setLoading] = useState(true);
+    const [locations, setLocations] = useState<any[]>([]);
+    const [locationsLoading, setLocationsLoading] = useState(true);
+
 
     // 1. Get logged-in user info (saved during Login)
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -27,6 +29,21 @@ export default function StudentDashboard() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        const loadLocations = async () => {
+            try {
+                const data = await api.resources.getLocations();
+                setLocations(data);
+            } catch (e) {
+                console.error("Failed to load locations", e);
+            } finally {
+                setLocationsLoading(false);
+            }
+        };
+
+        loadLocations();
+    }, []);
 
     // Load data on mount
     useEffect(() => {
@@ -81,6 +98,8 @@ export default function StudentDashboard() {
                     <StudentReportForm
                         onSuccess={handleReportSuccess}
                         onClose={() => setShowReportForm(false)}
+                        locations={locations}
+                        locationsLoading={locationsLoading}
                     />
 
                     {/* Additional Info */}

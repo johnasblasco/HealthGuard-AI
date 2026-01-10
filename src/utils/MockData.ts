@@ -26,7 +26,7 @@ import type {
 //     { id: 'loss-of-taste', name: 'Loss of Taste/Smell', category: 'other', icon: 'Nose' },
 // ];
 
-// School locations
+// School locations (FIXED UUIDs)
 export const LOCATIONS: Location[] = [
     {
         building: "Main Building",
@@ -42,7 +42,9 @@ export const LOCATIONS: Location[] = [
             {
                 name: "102",
                 seats: [
-                    { number: "B1", id: "e5f6g7h8-9i0j-1234-klmn-567890abcdef" },
+                    // was: e5f6g7h8-9i0j-1234-klmn-567890abcdef (INVALID)
+                    { number: "B1", id: "e5f607a8-9a0b-1234-abcd-567890abcdef" },
+
                     { number: "B2", id: "f1a2b3c4-d5e6-7890-abcd-ef1234567890" },
                 ],
             },
@@ -50,7 +52,9 @@ export const LOCATIONS: Location[] = [
                 name: "103",
                 seats: [
                     { number: "C1", id: "a1b2c3d4-e5f6-7890-abcd-1234567890ef" },
-                    { number: "C2", id: "b1c2d3e4-f5g6-7890-abcd-0987654321ab" },
+
+                    // was: b1c2d3e4-f5g6-7890-abcd-0987654321ab (INVALID)
+                    { number: "C2", id: "b1c2d3e4-f5a6-7890-abcd-0987654321ab" },
                 ],
             },
         ],
@@ -62,13 +66,16 @@ export const LOCATIONS: Location[] = [
                 name: "Lab-1",
                 seats: [
                     { number: "A1", id: "c1d2e3f4-5678-90ab-cdef-1234567890ab" },
-                    { number: "A2", id: "d1e2f3g4-5678-90ab-cdef-0987654321cd" },
+
+                    // was: d1e2f3g4-5678-90ab-cdef-0987654321cd (INVALID)
+                    { number: "A2", id: "d1e2f3a4-5678-90ab-cdef-0987654321cd" },
                 ],
             },
             {
                 name: "Lab-2",
                 seats: [
-                    { number: "B1", id: "e1f2g3h4-5678-90ab-cdef-112233445566" },
+                    // was: e1f2g3h4-5678-90ab-cdef-112233445566 (INVALID)
+                    { number: "B1", id: "e1f2a3b4-5678-90ab-cdef-112233445566" },
                 ],
             },
         ],
@@ -79,13 +86,17 @@ export const LOCATIONS: Location[] = [
             {
                 name: "401",
                 seats: [
-                    { number: "E1", id: "f1g2h3i4-5678-90ab-cdef-556677889900" },
-                    { number: "E2", id: "g1h2i3j4-5678-90ab-cdef-998877665544" },
+                    // was: f1g2h3i4-5678-90ab-cdef-556677889900 (INVALID)
+                    { number: "E1", id: "f1a2b3c4-5678-90ab-cdef-556677889900" },
+
+                    // was: g1h2i3j4-5678-90ab-cdef-998877665544 (INVALID)
+                    { number: "E2", id: "a1b2c3d4-5678-90ab-cdef-998877665544" },
                 ],
             },
         ],
     },
 ];
+
 
 
 // Mock health reports
